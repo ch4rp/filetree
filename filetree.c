@@ -34,19 +34,21 @@
 #include <errno.h>
 
 #define MAX_PATH_LENG	1024
-
+typedef enum _Ftype {
+	// directory = 1, not directory = 0
+	KFILE = 0, 
+	KDIR = 1
+}Ftype;
 
 int tree(const char *path, void (*func)(const char *, int))
 {
-	// directory = 1
-	// not directory = 0
-	static enum {KFILE = 0, KDIR = 1};
+	
 	
 	DIR *currdir;
 	struct dirent *direnv;
 	struct stat    envinf;
 	char filepath[MAX_PATH_LENG];
-	int  filetype;
+	Ftype filetype;
 	
 	if ((currdir = opendir(path)) == NULL)
 		return 1;
@@ -58,13 +60,9 @@ int tree(const char *path, void (*func)(const char *, int))
 		if (!strcmp(direnv->d_name, ".") || !strcmp(direnv->d_name, ".."))
 			continue;
 
-		// fill the array with '\0' characters for new file path
 		memset(filepath, 0, MAX_PATH_LENG);
-		// copy path to array
 		strcpy(filepath, path);
-		// just in case 
 		strcat(filepath, "/");
-		// add the file name to the end of array
 		strcat(filepath, direnv->d_name);
 
 		if (stat(filepath, &envinf) < 0) 
@@ -72,7 +70,6 @@ int tree(const char *path, void (*func)(const char *, int))
 		
 		// if file is a directory
 		if (envinf.st_mode & S_IFDIR) {
-			// apply same operations to file if file is a directory
 			tree(filepath, func);
 			filetype = KDIR;
 		}
