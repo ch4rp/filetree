@@ -1,7 +1,7 @@
 /*
 Title   : filetree (for windows)
 Author  : ch4rp
-Date    : 29 Mar 2023
+Date    : 30 Mar 2023
 
 Example usage:
   main.c:
@@ -17,28 +17,24 @@ Example usage:
     
     #define MAX_PATH_LENG 1024
     
-    int main(int argc, char **argv)
+    int main(void)
     {
-      char fullpath[MAX_PATH_LENG];
-      memset(fullpath, 0, MAX_PATH_LENG);
-      strcpy(fullpath, argv[1]);
-      strcat(fullpath, "\\");
-    
       void (*ret)(const char *, int) = printfile;
-      tree(fullpath, ret);
+      const char *startpath = "C:\\Users\\x\\Documents";
+    
+      tree(startpath, ret);
+    
       return 0;
     }
 
-
   $ gcc -c main.c
-  $ gcc -c filetree.c
-  $ gcc main.o filetree.o -o tree
-  $ .\tree C:\\Users\\x\\Documents
+  $ gcc -c forwindows.c
+  $ gcc main.o forwindows.o -o tree
+  $ .\tree 
 */
 
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <windows.h>
 
@@ -58,27 +54,29 @@ BOOL tree(LPCSTR path, VOID (*func)(LPCSTR, DWORD))
   WIN32_FIND_DATA fileinfo;
   HANDLE hFindFile;
 
-  memset(filepath, 0, MAX_PATH_LENG);
+  memset(filepath, '\0', MAX_PATH_LENG);
   strcpy(filepath, path);
-  strcat(filepath, "\\\\");
-  strcat(filepath, "*");
-
-  //printf("pwd: %s\n|\n", filepath);
+  strcat(filepath, "\\");
+  filepath[strlen(filepath)] = '*';
 
   if ((hFindFile = FindFirstFile(filepath, &fileinfo)) == INVALID_HANDLE_VALUE)
-  return 1;
+    return 1;
+
+  filepath[strlen(filepath)-1] = '\0';
+
 
   do {
     ftype = KFILE;
 
     if (!(strcmp(fileinfo.cFileName, ".") && strcmp(fileinfo.cFileName, "..")))
       continue;
-
-    filepath[strlen(filepath)-1] = '\0';
-    strcat(filepath, fileinfo.cFileName);
+    
+    memset(filepath, '\0', MAX_PATH_LENG);
+    strcpy(filepath, path);
+    strcat(filepath, "\\");
+	strcat(filepath, fileinfo.cFileName);
 
     if (fileinfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-      strcat(filepath, "\\\\");
       tree(filepath, func);
       ftype = KDIR;
     }
